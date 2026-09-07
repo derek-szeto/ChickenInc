@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="150dp"
+    android:layout_height="190dp"
+    android:padding="9dp"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:background="@drawable/shop_chicken_card_bg"
+    android:elevation="5dp">
+
+
+    <TextView
+        android:id="@+id/cardNameText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="Spotted Chicken"
+        android:textColor="#67E33D"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-rounded" />
+
+
+    <FrameLayout
+        android:layout_width="110dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="3dp">
+
+
+        <View
+            android:layout_width="82dp"
+            android:layout_height="20dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/chicken_ground_bg" />
+
+
+        <ImageView
+            android:id="@+id/cardChickenImage"
+            android:layout_width="100dp"
+            android:layout_height="95dp"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:contentDescription="Chicken" />
+
+    </FrameLayout>
+
+
+    <TextView
+        android:id="@+id/cardRarityText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Uncommon"
+        android:textColor="#67E33D"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-rounded" />
+
+
+    <TextView
+        android:id="@+id/cardPriceText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="🥚 300"
+        android:textColor="#57351F"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-rounded" />
+
+</LinearLayout>
