@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    android:id="@+id/shopPopupRoot"
+
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+
+    android:orientation="vertical"
+    android:gravity="center"
+
+    android:padding="22dp"
+
+    android:background="@drawable/shop_popup_bg">
+
+
+    <!-- TITLE -->
+
+    <TextView
+        android:id="@+id/shopPopupTitle"
+
+        style="@style/GameTitle"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:gravity="center"
+
+        android:text="PURCHASED!"
+
+        android:textColor="#57351F"
+
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="16sp"
+        android:autoSizeMaxTextSize="27sp"
+        android:autoSizeStepGranularity="1sp"
+
+        android:maxLines="2" />
+
+
+    <!-- CHICKEN -->
+
+    <ImageView
+        android:id="@+id/shopPopupImage"
+
+        android:layout_width="145dp"
+        android:layout_height="145dp"
+
+        android:layout_marginTop="10dp"
+
+        android:scaleType="fitCenter"
+
+        android:visibility="gone"
+
+        android:contentDescription="Shop popup chicken" />
+
+
+    <!-- CHICKEN NAME -->
+
+    <TextView
+        android:id="@+id/shopPopupChickenName"
+
+        style="@style/GameResponsiveName"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:minHeight="50dp"
+
+        android:layout_marginTop="5dp"
+
+        android:gravity="center"
+
+        android:text="Best Strawberry Chicken"
+
+        android:autoSizeMinTextSize="13sp"
+        android:autoSizeMaxTextSize="22sp"
+
+        android:maxLines="2"
+
+        android:visibility="gone" />
+
+
+    <!-- MESSAGE -->
+
+    <TextView
+        android:id="@+id/shopPopupMessage"
+
+        style="@style/GameText"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:layout_marginTop="8dp"
+
+        android:gravity="center"
+
+        android:text="Added to your collection!"
+
+        android:textColor="#69462D"
+
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="12sp"
+        android:autoSizeMaxTextSize="16sp"
+        android:autoSizeStepGranularity="1sp"
+
+        android:maxLines="4"
+
+        android:lineSpacingExtra="3dp" />
+
+
+    <!-- BUTTON -->
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/shopPopupButton"
+
+        style="@style/GameButtonText"
+
+        android:layout_width="195dp"
+        android:layout_height="54dp"
+
+        android:layout_marginTop="18dp"
+
+        android:text="AWESOME!"
+
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+
+        android:background="@drawable/game_buy_button_bg"
+
+        app:backgroundTint="@null" />
+
+</LinearLayout>

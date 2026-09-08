@@ -2,31 +2,53 @@ package com.example.chickeninc
 
 object GameManager {
 
-    var eggs: Int = 0
-
-    var mood: Int = 100
+    var eggs = 0
+    var mood = 100
 
     val feeder = Feeder()
-    //dynamic spin variables
-    var spinRolls: Int = 0
 
-    var nextFreeSpinTime: Long = 0L
-    //timer variables for gadgets
-    var unlimitedFeederUntil: Long = 0L
+    var spinRolls = 0
+    var nextFreeSpinTime = 0L
+    var unlimitedFeederUntil = 0L
+    var unlimitedMoodUntil = 0L
 
-    var unlimitedMoodUntil: Long = 0L
-
-
-    const val SPIN_COOLDOWN: Long =
+    const val SPIN_COOLDOWN =
         6L * 60L * 60L * 1000L
 
-    const val GADGET_DURATION: Long =
+    const val GADGET_DURATION =
         5L * 60L * 1000L
 
+    const val MAX_REBIRTHS = 10
 
-    // =========================
-    // COMMON
-    // =========================
+    var rebirthLevel = 0
+    var maxChickenSlots = 1
+
+    private val rebirthMultipliers = intArrayOf(
+        1,
+        2,
+        4,
+        8,
+        12,
+        18,
+        25,
+        35,
+        50,
+        70,
+        100
+    )
+
+    private val rebirthCosts = intArrayOf(
+        100_000,
+        500_000,
+        2_000_000,
+        10_000_000,
+        30_000_000,
+        75_000_000,
+        150_000_000,
+        300_000_000,
+        600_000_000,
+        1_200_000_000
+    )
 
     val basicChicken = Chicken(
         "Basic Chicken",
@@ -36,11 +58,6 @@ object GameManager {
         100,
         R.drawable.basic_chicken
     )
-
-
-    // =========================
-    // UNCOMMON
-    // =========================
 
     val spottedChicken = Chicken(
         "Spotted Chicken",
@@ -86,11 +103,6 @@ object GameManager {
         400,
         R.drawable.mexican_chicken
     )
-
-
-    // =========================
-    // RARE
-    // =========================
 
     val silverChicken = Chicken(
         "Silver Chicken",
@@ -145,11 +157,6 @@ object GameManager {
         2500,
         R.drawable.ninja_chicken
     )
-
-
-    // =========================
-    // EPIC
-    // =========================
 
     val diamondChicken = Chicken(
         "Diamond Chicken",
@@ -214,11 +221,6 @@ object GameManager {
         R.drawable.superhero_chicken
     )
 
-
-    // =========================
-    // LEGENDARY
-    // =========================
-
     val spaceChicken = Chicken(
         "Space Chicken",
         Rarity.LEGENDARY,
@@ -237,17 +239,12 @@ object GameManager {
         R.drawable.glitch_chicken
     )
 
-
-    // =========================
-    // SECRET SHOP CHICKENS
-    // =========================
-
     val shinyChicken = Chicken(
         "Shiny Chicken",
         Rarity.SECRET,
         250,
-        2000000,
-        100000,
+        2_000_000,
+        100_000,
         R.drawable.shiny_chicken
     )
 
@@ -255,22 +252,17 @@ object GameManager {
         "Chromatic Chicken",
         Rarity.SECRET,
         400,
-        5000000,
-        250000,
+        5_000_000,
+        250_000,
         R.drawable.chromatic_chicken
     )
-
-
-    // =========================
-    // SPECIAL / NOT IN SHOP
-    // =========================
 
     val kingChicken = Chicken(
         "King Chicken",
         Rarity.LEGENDARY,
         500,
         0,
-        100000,
+        100_000,
         R.drawable.king_chicken,
         false
     )
@@ -280,7 +272,7 @@ object GameManager {
         Rarity.SECRET,
         700,
         0,
-        200000,
+        200_000,
         R.drawable.corrupted_chicken,
         false
     )
@@ -290,7 +282,7 @@ object GameManager {
         Rarity.SECRET,
         800,
         0,
-        250000,
+        250_000,
         R.drawable.angel_chicken,
         false
     )
@@ -300,7 +292,7 @@ object GameManager {
         Rarity.SECRET,
         850,
         0,
-        250000,
+        250_000,
         R.drawable.demon_chicken,
         false
     )
@@ -310,7 +302,7 @@ object GameManager {
         Rarity.SECRET,
         1000,
         0,
-        300000,
+        300_000,
         R.drawable.best_strawberry_chicken,
         false
     )
@@ -320,31 +312,23 @@ object GameManager {
         Rarity.SECRET,
         1500,
         0,
-        400000,
+        400_000,
         R.drawable.best_diamond_chicken,
         false
     )
 
-
-    // =========================
-    // SHOP CATALOG
-    // =========================
-
     val shopChickens = listOf(
-
         spottedChicken,
         strawberryChicken,
         blueberryChicken,
         fancyChicken,
         mexicanChicken,
-
         silverChicken,
         goldChicken,
         emeraldChicken,
         rubyChicken,
         candyChicken,
         ninjaChicken,
-
         diamondChicken,
         fireChicken,
         iceChicken,
@@ -352,63 +336,43 @@ object GameManager {
         toxicChicken,
         robotChicken,
         superheroChicken,
-
         spaceChicken,
         glitchChicken,
-
         shinyChicken,
         chromaticChicken
     )
 
-
-    // Player starts with Basic Chicken
-    // All chickens the player has purchased
     val ownedChickens = ArrayList<Chicken>()
-
-    // Chickens currently active on the farm
     val equippedChickens = ArrayList<Chicken>()
 
-    // Player begins with one active slot
-    var maxChickenSlots = 1
-
-
     init {
-
         ownedChickens.add(basicChicken)
         equippedChickens.add(basicChicken)
     }
 
-
-    // =========================
-    // PRODUCTION
-    // =========================
+    fun getChickenProduction(chicken: Chicken): Int {
+        return chicken.getProduction() * getRebirthMultiplier()
+    }
 
     fun getTotalProduction(): Int {
-
         var total = 0
 
         for (chicken in equippedChickens) {
-
-            total += chicken.getProduction()
+            total += getChickenProduction(chicken)
         }
 
         return total
     }
 
     fun isOwned(chicken: Chicken): Boolean {
-
         return ownedChickens.contains(chicken)
     }
 
-
     fun isEquipped(chicken: Chicken): Boolean {
-
         return equippedChickens.contains(chicken)
     }
 
-
     fun buyChicken(chicken: Chicken): Boolean {
-
         if (!chicken.availableInShop) {
             return false
         }
@@ -422,22 +386,16 @@ object GameManager {
         }
 
         eggs -= chicken.shopPrice
-
         ownedChickens.add(chicken)
 
-
-        // Automatically place it on the farm if there is room
         if (equippedChickens.size < maxChickenSlots) {
-
             equippedChickens.add(chicken)
         }
 
         return true
     }
 
-
     fun equipChicken(chicken: Chicken): Boolean {
-
         if (!isOwned(chicken)) {
             return false
         }
@@ -451,196 +409,152 @@ object GameManager {
         }
 
         equippedChickens.add(chicken)
-
         return true
     }
 
-
     fun unequipChicken(chicken: Chicken): Boolean {
-
         if (!isEquipped(chicken)) {
             return false
         }
 
-        // Always require at least one active chicken
         if (equippedChickens.size <= 1) {
             return false
         }
 
         equippedChickens.remove(chicken)
-
         return true
     }
+
+    fun replaceEquippedChicken(
+        slotIndex: Int,
+        newChicken: Chicken
+    ): Boolean {
+        if (!isOwned(newChicken)) {
+            return false
+        }
+
+        if (isEquipped(newChicken)) {
+            return false
+        }
+
+        if (slotIndex !in equippedChickens.indices) {
+            return false
+        }
+
+        equippedChickens[slotIndex] = newChicken
+        return true
+    }
+
     fun getNextSlotPrice(): Int? {
-
         return when (maxChickenSlots) {
-
-            1 -> 5000
-
-            2 -> 100000
-
+            1 -> 5_000
+            2 -> 100_000
             else -> null
         }
     }
 
-
     fun buyNextSlot(): Boolean {
-
-        val price = getNextSlotPrice()
-            ?: return false
-
+        val price = getNextSlotPrice() ?: return false
 
         if (eggs < price) {
             return false
         }
 
-
         eggs -= price
-
-        maxChickenSlots += 1
+        maxChickenSlots++
 
         return true
     }
-    // =========================
-    // BUY CHICKEN
-    // =========================
 
-//    fun buyChicken(chicken: Chicken): Boolean {
-//
-//        if (!chicken.availableInShop) {
-//            return false
-//        }
-//
-//        // Cannot buy same chicken twice
-//        if (ownedChickens.contains(chicken)) {
-//            return false
-//        }
-//
-//        // No available chicken slot
-//        if (ownedChickens.size >= maxChickenSlots) {
-//            return false
-//        }
-//
-//        // Not enough eggs
-//        if (eggs < chicken.shopPrice) {
-//            return false
-//        }
-//
-//        eggs -= chicken.shopPrice
-//
-//        ownedChickens.add(chicken)
-//
-//        return true
-//    }
     fun isFreeSpinReady(): Boolean {
-
-        return System.currentTimeMillis() >=
-                nextFreeSpinTime
+        return System.currentTimeMillis() >= nextFreeSpinTime
     }
-
 
     fun canSpin(): Boolean {
-
-        return isFreeSpinReady() ||
-                spinRolls > 0
+        return isFreeSpinReady() || spinRolls > 0
     }
 
-
     fun consumeSpin(): Boolean {
-
-        // Use free spin first
         if (isFreeSpinReady()) {
-
             nextFreeSpinTime =
-                System.currentTimeMillis() +
-                        SPIN_COOLDOWN
+                System.currentTimeMillis() + SPIN_COOLDOWN
 
             return true
         }
 
-
-        // Otherwise use a spin roll
         if (spinRolls > 0) {
-
             spinRolls--
-
             return true
         }
-
 
         return false
     }
 
-
     fun activateUnlimitedFeeder() {
-
-        val currentTime =
-            System.currentTimeMillis()
-
-        val startTime =
-            maxOf(
-                currentTime,
-                unlimitedFeederUntil
-            )
+        val currentTime = System.currentTimeMillis()
+        val startTime = maxOf(currentTime, unlimitedFeederUntil)
 
         unlimitedFeederUntil =
             startTime + GADGET_DURATION
     }
 
-
     fun activateUnlimitedMood() {
-
-        val currentTime =
-            System.currentTimeMillis()
-
-        val startTime =
-            maxOf(
-                currentTime,
-                unlimitedMoodUntil
-            )
+        val currentTime = System.currentTimeMillis()
+        val startTime = maxOf(currentTime, unlimitedMoodUntil)
 
         unlimitedMoodUntil =
             startTime + GADGET_DURATION
     }
 
-
     fun hasUnlimitedFeeder(): Boolean {
-
-        return System.currentTimeMillis() <
-                unlimitedFeederUntil
+        return System.currentTimeMillis() < unlimitedFeederUntil
     }
-
 
     fun hasUnlimitedMood(): Boolean {
-
-        return System.currentTimeMillis() <
-                unlimitedMoodUntil
+        return System.currentTimeMillis() < unlimitedMoodUntil
     }
-    fun replaceEquippedChicken(
-        slotIndex: Int,
-        newChicken: Chicken
-    ): Boolean {
 
-        // Player must own the chicken
-        if (!ownedChickens.contains(newChicken)) {
+    fun getRebirthMultiplier(): Int {
+        val safeLevel =
+            rebirthLevel.coerceIn(0, MAX_REBIRTHS)
+
+        return rebirthMultipliers[safeLevel]
+    }
+
+    fun getNextRebirthMultiplier(): Int? {
+        if (rebirthLevel >= MAX_REBIRTHS) {
+            return null
+        }
+
+        return rebirthMultipliers[rebirthLevel + 1]
+    }
+
+    fun getNextRebirthCost(): Int? {
+        if (rebirthLevel >= MAX_REBIRTHS) {
+            return null
+        }
+
+        return rebirthCosts[rebirthLevel]
+    }
+
+    fun canRebirth(): Boolean {
+        val cost = getNextRebirthCost() ?: return false
+        return eggs >= cost
+    }
+
+    fun performRebirth(): Boolean {
+        if (!canRebirth()) {
             return false
         }
 
-        // Chicken cannot already be active
-        if (equippedChickens.contains(newChicken)) {
-            return false
-        }
+        rebirthLevel++
+        eggs = 0
+        mood = 100
 
-        // Make sure slot actually exists
-        if (
-            slotIndex < 0 ||
-            slotIndex >= equippedChickens.size
-        ) {
-            return false
+        for (chicken in ownedChickens) {
+            chicken.upgradeLevel = 0
+            chicken.multiplier = 1.0
         }
-
-        equippedChickens[slotIndex] =
-            newChicken
 
         return true
     }

@@ -2,74 +2,123 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="150dp"
-    android:layout_height="190dp"
-    android:padding="9dp"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:background="@drawable/shop_chicken_card_bg"
-    android:elevation="5dp">
 
+    android:layout_width="0dp"
+    android:layout_height="225dp"
+
+    android:layout_columnWeight="1"
+    android:layout_gravity="fill_horizontal"
+
+    android:orientation="vertical"
+
+    android:gravity="center"
+
+    android:padding="9dp"
+
+    android:background="@drawable/shop_chicken_card_bg">
+
+
+    <!-- NAME -->
 
     <TextView
         android:id="@+id/cardNameText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:text="Spotted Chicken"
-        android:textColor="#67E33D"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:fontFamily="sans-serif-rounded" />
 
+        style="@style/GameResponsiveName"
+
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+
+        android:paddingStart="3dp"
+        android:paddingEnd="3dp"
+
+        android:gravity="center"
+
+        android:text="Strawberry Chicken"
+
+        android:autoSizeMinTextSize="9sp"
+        android:autoSizeMaxTextSize="16sp"
+
+        android:maxLines="2" />
+
+
+    <!-- CHICKEN IMAGE -->
 
     <FrameLayout
-        android:layout_width="110dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="3dp">
+        android:layout_width="match_parent"
+        android:layout_height="105dp">
 
 
         <View
-            android:layout_width="82dp"
-            android:layout_height="20dp"
+            android:layout_width="90dp"
+            android:layout_height="22dp"
+
             android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="4dp"
+
+            android:layout_marginBottom="3dp"
+
             android:background="@drawable/chicken_ground_bg" />
 
 
         <ImageView
             android:id="@+id/cardChickenImage"
-            android:layout_width="100dp"
-            android:layout_height="95dp"
+
+            android:layout_width="105dp"
+            android:layout_height="100dp"
+
             android:layout_gravity="center"
+
             android:scaleType="fitCenter"
+
             android:contentDescription="Chicken" />
 
     </FrameLayout>
 
 
+    <!-- RARITY -->
+
     <TextView
         android:id="@+id/cardRarityText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Uncommon"
-        android:textColor="#67E33D"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:fontFamily="sans-serif-rounded" />
 
+        style="@style/GameTitle"
+
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+
+        android:gravity="center"
+
+        android:text="Uncommon"
+
+        android:textColor="#67E33D"
+
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="9sp"
+        android:autoSizeMaxTextSize="14sp"
+        android:autoSizeStepGranularity="1sp"
+
+        android:maxLines="1" />
+
+
+    <!-- PRICE -->
 
     <TextView
         android:id="@+id/cardPriceText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:text="🥚 300"
+
+        style="@style/GameTitle"
+
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+
+        android:gravity="center"
+
+        android:text="🥚 500"
+
         android:textColor="#57351F"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:fontFamily="sans-serif-rounded" />
+
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="9sp"
+        android:autoSizeMaxTextSize="14sp"
+        android:autoSizeStepGranularity="1sp"
+
+        android:maxLines="1" />
 
 </LinearLayout>

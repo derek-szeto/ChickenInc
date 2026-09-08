@@ -7,104 +7,166 @@
     android:layout_height="match_parent">
 
 
+    <!-- ===================================== -->
     <!-- FARM BACKGROUND -->
+    <!-- ===================================== -->
+
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/default_bg"
-        android:scaleType="centerCrop" />
+        android:src="@drawable/chickeninc_bg"
+        android:scaleType="centerCrop"
+        android:contentDescription="Farm background" />
 
 
-    <!-- Slight dark overlay -->
+    <!-- Keeps text readable without making
+         the farm background too dark -->
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#33000000" />
+        android:background="#22000000" />
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingStart="34dp"
-        android:paddingEnd="34dp"
-        android:paddingTop="45dp"
-        android:paddingBottom="45dp">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="55dp"
+        android:paddingBottom="35dp">
 
 
-        <!-- BACK -->
-        <Button
+        <!-- ===================================== -->
+        <!-- UNIVERSAL BACK -->
+        <!-- ===================================== -->
+
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/backButton"
-            android:layout_width="55dp"
-            android:layout_height="50dp"
-            android:text="←"
-            android:textSize="20sp"
-            android:textStyle="bold"
+            style="@style/GameButtonText"
+
+            android:layout_width="105dp"
+            android:layout_height="48dp"
+
+            android:text="←  BACK"
             android:textColor="#FFFFFF"
-            android:background="@drawable/close_button_bg"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:textSize="14sp"
+
+            android:background="@drawable/game_back_button_bg"
+            app:backgroundTint="@null"
+
+            android:elevation="9dp"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
 
+        <!-- ===================================== -->
         <!-- TITLE -->
+        <!-- ===================================== -->
+
         <TextView
             android:id="@+id/spinTitleText"
+            style="@style/GameTitle"
+
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+
+            android:layout_marginTop="60dp"
+
             android:text="LUCKY WHEEL!"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:textColor="#FFF176"
-            android:shadowColor="#E65100"
-            android:shadowDx="3"
+            android:textSize="32sp"
+            android:textColor="#FFD34E"
+
+            android:shadowColor="#8A4E27"
+            android:shadowDx="2"
             android:shadowDy="3"
-            android:shadowRadius="3"
+            android:shadowRadius="2"
+
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
 
+        <!-- ===================================== -->
+        <!-- WHEEL DESCRIPTION -->
+        <!-- ===================================== -->
+
         <TextView
             android:id="@+id/wheelInfoText"
+            style="@style/GameText"
+
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="7 CHICKENS + 1 GADGET"
-            android:textColor="#FFFFFF"
+
+            android:layout_marginTop="7dp"
+
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="7dp"
+            android:paddingBottom="7dp"
+
+            android:text="🐔 7 CHICKENS  +  1 GADGET ⚡"
+
+            android:textColor="#57351F"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:background="@drawable/game_info_bg"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:layout_marginTop="8dp"
+
+            android:background="@drawable/main_small_badge_bg"
+
+            android:elevation="4dp"
+
             app:layout_constraintTop_toBottomOf="@id/spinTitleText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
 
+        <!-- ===================================== -->
         <!-- TIMER -->
+        <!-- ===================================== -->
+
         <TextView
             android:id="@+id/spinTimerText"
+            style="@style/GameTitle"
+
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+
+            android:layout_marginTop="8dp"
+
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+
             android:text="FREE SPIN READY!"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:background="@drawable/game_info_bg"
-            android:padding="8dp"
-            android:layout_marginTop="10dp"
+
+            android:textColor="#57351F"
+            android:textSize="15sp"
+
+            android:background="@drawable/main_egg_sign_bg"
+
+            android:elevation="5dp"
+
             app:layout_constraintTop_toBottomOf="@id/wheelInfoText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
 
-        <!-- WHEEL -->
+        <!-- ===================================== -->
+        <!-- PRIZE WHEEL -->
+        <!-- ===================================== -->
+
         <FrameLayout
             android:id="@+id/wheelArea"
+
             android:layout_width="330dp"
             android:layout_height="330dp"
-            android:layout_marginTop="16dp"
+
+            android:layout_marginTop="13dp"
+
+            android:clipChildren="false"
+            android:clipToPadding="false"
+
             app:layout_constraintTop_toBottomOf="@id/spinTimerText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -112,60 +174,97 @@
 
             <com.example.chickeninc.PrizeWheelView
                 android:id="@+id/prizeWheelView"
+
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
 
-            <!-- Fixed pointer -->
+            <!-- Fixed wheel pointer -->
+
             <TextView
                 android:id="@+id/wheelPointer"
+                style="@style/GameTitle"
+
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+
                 android:layout_gravity="top|center_horizontal"
+
                 android:translationY="-3dp"
+
                 android:text="▼"
+
                 android:textSize="44sp"
-                android:textStyle="bold"
-                android:textColor="#FF1744"
+                android:textColor="#EF5B4D"
+
                 android:elevation="25dp"
+
                 android:shadowColor="#FFFFFF"
                 android:shadowDx="0"
                 android:shadowDy="0"
-                android:shadowRadius="5" />
+                android:shadowRadius="6" />
 
         </FrameLayout>
 
 
-        <!-- SPIN -->
-        <Button
+        <!-- ===================================== -->
+        <!-- SPIN BUTTON -->
+        <!-- ===================================== -->
+
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/spinButton"
-            android:layout_width="220dp"
-            android:layout_height="65dp"
-            android:layout_marginTop="14dp"
-            android:text="SPIN!"
-            android:textSize="22sp"
-            android:textStyle="bold"
+            style="@style/GameButtonText"
+
+            android:layout_width="235dp"
+            android:layout_height="64dp"
+
+            android:layout_marginTop="12dp"
+
+            android:text="🎡  SPIN!"
+            android:textSize="21sp"
             android:textColor="#FFFFFF"
-            android:background="@drawable/spin_button_bg"
+
+            android:background="@drawable/main_spin_button_bg"
+            app:backgroundTint="@null"
+
             android:elevation="12dp"
+
             app:layout_constraintTop_toBottomOf="@id/wheelArea"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
 
-        <!-- RESULT -->
+        <!-- ===================================== -->
+        <!-- RESULT CARD -->
+        <!-- ===================================== -->
+
         <TextView
             android:id="@+id/resultText"
+            style="@style/GameTitle"
+
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+
+            android:minHeight="64dp"
+
+            android:layout_marginTop="10dp"
+
             android:gravity="center"
+
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+
             android:text="Tap SPIN to win!"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:background="@drawable/game_info_bg"
-            android:padding="10dp"
+
+            android:textColor="#57351F"
+            android:textSize="17sp"
+
+            android:background="@drawable/main_small_badge_bg"
+
+            android:elevation="6dp"
+
             app:layout_constraintTop_toBottomOf="@id/spinButton"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />

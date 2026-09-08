@@ -1,21 +1,24 @@
 package com.example.chickeninc
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
+import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.widget.Button
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import android.app.Dialog
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-class ShopActivity : AppCompatActivity() {
 
-    // =========================
-    // MAIN SHOP VIEWS
-    // =========================
+class ShopActivity : AppCompatActivity() {
 
     private lateinit var chickenGrid: GridLayout
 
@@ -25,151 +28,137 @@ class ShopActivity : AppCompatActivity() {
     private lateinit var shopTitleText: TextView
     private lateinit var shopEggText: TextView
 
-
-    // =========================
-    // CHICKEN PREVIEW
-    // =========================
-
     private lateinit var previewImage: ImageView
     private lateinit var previewName: TextView
     private lateinit var previewRarity: TextView
     private lateinit var previewStats: TextView
     private lateinit var previewPrice: TextView
 
-    private lateinit var buyButton: Button
-    private lateinit var deployButton: Button
+    private lateinit var feederStockText: TextView
+    private lateinit var feederRestockCostText: TextView
 
-
-    // =========================
-    // TABS
-    // =========================
-
+    private lateinit var backButton: Button
     private lateinit var chickensTab: Button
     private lateinit var gadgetsTab: Button
+    private lateinit var buyButton: Button
+    private lateinit var deployButton: Button
+    private lateinit var restockFeederButton: Button
 
+    private var selectedChicken = GameManager.basicChicken
+    private var showingGadgets = false
 
-    // Chicken currently selected
-    private var selectedChicken: Chicken =
-        GameManager.basicChicken
-
+    private var previewBobAnimator: ObjectAnimator? = null
+    private var buyPulseAnimator: ValueAnimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_shop)
 
+        bindViews()
+        setListeners()
+        setButtonAnimations()
 
-        // =========================
-        // FIND VIEWS
-        // =========================
+        showChickenTab(false)
+    }
 
-        chickenGrid =
-            findViewById(R.id.chickenGrid)
+    override fun onResume() {
+        super.onResume()
 
-        chickensContent =
-            findViewById(R.id.chickensContent)
+        updateEggDisplay()
 
-        gadgetsContent =
-            findViewById(R.id.gadgetsContent)
+        if (showingGadgets) {
+            updateFeederRestock()
+        } else {
+            populateChickenGrid(false)
+            updatePreview()
+            startPreviewBob()
+        }
+    }
 
+    override fun onPause() {
+        super.onPause()
 
-        shopTitleText =
-            findViewById(R.id.shopTitleText)
+        stopPreviewBob()
+        stopBuyPulse()
+    }
 
-        shopEggText =
-            findViewById(R.id.shopEggText)
+    override fun onDestroy() {
+        stopPreviewBob()
+        stopBuyPulse()
 
+        super.onDestroy()
+    }
 
-        previewImage =
-            findViewById(R.id.previewImage)
+    private fun bindViews() {
+        chickenGrid = findViewById(R.id.chickenGrid)
 
-        previewName =
-            findViewById(R.id.previewName)
+        chickensContent = findViewById(R.id.chickensContent)
+        gadgetsContent = findViewById(R.id.gadgetsContent)
 
-        previewRarity =
-            findViewById(R.id.previewRarity)
+        shopTitleText = findViewById(R.id.shopTitleText)
+        shopEggText = findViewById(R.id.shopEggText)
 
-        previewStats =
-            findViewById(R.id.previewStats)
+        previewImage = findViewById(R.id.previewImage)
+        previewName = findViewById(R.id.previewName)
+        previewRarity = findViewById(R.id.previewRarity)
+        previewStats = findViewById(R.id.previewStats)
+        previewPrice = findViewById(R.id.previewPrice)
 
-        previewPrice =
-            findViewById(R.id.previewPrice)
+        feederStockText = findViewById(R.id.feederStockText)
+        feederRestockCostText = findViewById(R.id.feederRestockCostText)
 
+        backButton = findViewById(R.id.backButton)
+        chickensTab = findViewById(R.id.chickensTab)
+        gadgetsTab = findViewById(R.id.gadgetsTab)
+        buyButton = findViewById(R.id.buyButton)
+        deployButton = findViewById(R.id.deployButton)
+        restockFeederButton = findViewById(R.id.restockFeederButton)
+    }
 
-        buyButton =
-            findViewById(R.id.buyButton)
-
-        deployButton =
-            findViewById(R.id.deployButton)
-
-
-        chickensTab =
-            findViewById(R.id.chickensTab)
-
-        gadgetsTab =
-            findViewById(R.id.gadgetsTab)
-
-
-        val backButton =
-            findViewById<Button>(R.id.backButton)
-
-
-        // =========================
-        // BUTTON LISTENERS
-        // =========================
-
+    private fun setListeners() {
         backButton.setOnClickListener {
-
             finish()
         }
 
-
         chickensTab.setOnClickListener {
-
             showChickenTab()
         }
 
-
         gadgetsTab.setOnClickListener {
-
             showGadgetsTab()
         }
 
-
         buyButton.setOnClickListener {
-
             buySelectedChicken()
         }
 
-
         deployButton.setOnClickListener {
-
             handleDeployButton()
         }
 
-
-        // Start on chicken shop
-        showChickenTab()
+        restockFeederButton.setOnClickListener {
+            restockFeeder()
+        }
     }
 
+    private fun setButtonAnimations() {
+        listOf(
+            backButton,
+            chickensTab,
+            gadgetsTab,
+            buyButton,
+            deployButton,
+            restockFeederButton
+        ).forEach {
+            addButtonPressAnimation(it)
+        }
+    }
 
-    // =====================================================
-    // CHICKEN TAB
-    // =====================================================
+    private fun showChickenTab(animate: Boolean = true) {
+        showingGadgets = false
 
-    private fun showChickenTab() {
+        shopTitleText.text = "🐔 CHICKEN SHOP!"
 
-        shopTitleText.text =
-            "🐔 Chicken Shop"
-
-        chickensContent.visibility =
-            View.VISIBLE
-
-        gadgetsContent.visibility =
-            View.GONE
-
-
-        // Selected tab graphics
         chickensTab.setBackgroundResource(
             R.drawable.shop_tab_selected_bg
         )
@@ -178,30 +167,29 @@ class ShopActivity : AppCompatActivity() {
             R.drawable.shop_tab_unselected_bg
         )
 
+        if (animate) {
+            showContentAnimated(
+                chickensContent,
+                gadgetsContent,
+                false
+            )
+        } else {
+            gadgetsContent.visibility = View.GONE
+            chickensContent.visibility = View.VISIBLE
+            chickensContent.alpha = 1f
+            chickensContent.translationX = 0f
+        }
 
         updateEggDisplay()
-
         populateChickenGrid()
-
         updatePreview()
+        startPreviewBob()
     }
-
-
-    // =====================================================
-    // GADGET TAB
-    // =====================================================
 
     private fun showGadgetsTab() {
+        showingGadgets = true
 
-        shopTitleText.text =
-            "⚡ Gadget Shop"
-
-        chickensContent.visibility =
-            View.GONE
-
-        gadgetsContent.visibility =
-            View.VISIBLE
-
+        shopTitleText.text = "⚡ GADGET SHOP!"
 
         chickensTab.setBackgroundResource(
             R.drawable.shop_tab_unselected_bg
@@ -211,29 +199,60 @@ class ShopActivity : AppCompatActivity() {
             R.drawable.shop_tab_selected_bg
         )
 
+        showContentAnimated(
+            gadgetsContent,
+            chickensContent,
+            true
+        )
+
+        stopPreviewBob()
+        stopBuyPulse()
 
         updateEggDisplay()
+        updateFeederRestock()
     }
 
+    private fun showContentAnimated(
+        showView: View,
+        hideView: View,
+        moveFromRight: Boolean
+    ) {
+        showView.animate().cancel()
+        hideView.animate().cancel()
 
-    // =====================================================
-    // CHICKEN GRID
-    // =====================================================
+        hideView.visibility = View.GONE
+        showView.visibility = View.VISIBLE
 
-    private fun populateChickenGrid() {
+        showView.alpha = 0f
 
+        showView.translationX =
+            if (moveFromRight) {
+                dpToPx(30).toFloat()
+            } else {
+                -dpToPx(30).toFloat()
+            }
+
+        showView.animate()
+            .alpha(1f)
+            .translationX(0f)
+            .setDuration(220)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+    }
+
+    private fun populateChickenGrid(
+        animateCards: Boolean = true
+    ) {
         chickenGrid.removeAllViews()
 
+        for (index in GameManager.shopChickens.indices) {
+            val chicken = GameManager.shopChickens[index]
 
-        for (chicken in GameManager.shopChickens) {
-
-            val card =
-                layoutInflater.inflate(
-                    R.layout.item_chicken_shop,
-                    chickenGrid,
-                    false
-                )
-
+            val card = layoutInflater.inflate(
+                R.layout.item_chicken_shop,
+                chickenGrid,
+                false
+            )
 
             val image =
                 card.findViewById<ImageView>(
@@ -255,25 +274,11 @@ class ShopActivity : AppCompatActivity() {
                     R.id.cardPriceText
                 )
 
+            image.setImageResource(chicken.imageResId)
 
-            // =========================
-            // CARD INFORMATION
-            // =========================
+            name.text = chicken.name
+            rarity.text = chicken.rarity.displayName
 
-            image.setImageResource(
-                chicken.imageResId
-            )
-
-
-            name.text =
-                chicken.name
-
-
-            rarity.text =
-                chicken.rarity.displayName
-
-
-            // Rarity colors / animations
             RarityTextStyler.apply(
                 name,
                 chicken.rarity
@@ -284,92 +289,76 @@ class ShopActivity : AppCompatActivity() {
                 chicken.rarity
             )
 
-
-            // =========================
-            // OWNERSHIP STATUS
-            // =========================
-
-            if (GameManager.isOwned(chicken)) {
-
-                if (GameManager.isEquipped(chicken)) {
-
-                    price.text =
-                        "ACTIVE"
+            when {
+                GameManager.isEquipped(chicken) -> {
+                    price.text = "ACTIVE"
 
                     price.setTextColor(
-                        getColor(
-                            android.R.color.holo_green_dark
-                        )
-                    )
-
-                } else {
-
-                    price.text =
-                        "OWNED"
-
-                    price.setTextColor(
-                        getColor(
-                            android.R.color.holo_green_dark
-                        )
+                        Color.parseColor("#3F8A47")
                     )
                 }
 
-            } else {
+                GameManager.isOwned(chicken) -> {
+                    price.text = "OWNED"
 
-                price.text =
-                    "🥚 ${formatNumber(chicken.shopPrice)}"
-
-                price.setTextColor(
-                    getColor(
-                        android.R.color.black
+                    price.setTextColor(
+                        Color.parseColor("#3F8A47")
                     )
-                )
+                }
+
+                else -> {
+                    price.text =
+                        "🥚 ${formatNumber(chicken.shopPrice)}"
+
+                    price.setTextColor(
+                        Color.parseColor("#57351F")
+                    )
+                }
             }
 
-
-            // =========================
-            // SELECT CHICKEN
-            // =========================
-
             card.setOnClickListener {
+                selectedChicken = chicken
 
-                selectedChicken =
-                    chicken
-
+                animateCardSelection(card)
                 updatePreview()
             }
 
-
             chickenGrid.addView(card)
+
+            if (animateCards) {
+                card.alpha = 0f
+                card.translationY =
+                    dpToPx(25).toFloat()
+
+                card.postDelayed(
+                    {
+                        card.animate()
+                            .alpha(1f)
+                            .translationY(0f)
+                            .setDuration(220)
+                            .setInterpolator(
+                                DecelerateInterpolator()
+                            )
+                            .start()
+                    },
+                    index * 45L
+                )
+            }
         }
     }
 
-
-    // =====================================================
-    // SELECTED CHICKEN PREVIEW
-    // =====================================================
-
     private fun updatePreview() {
+        val chicken = selectedChicken
 
-        val chicken =
-            selectedChicken
-
-
-        // Image
         previewImage.setImageResource(
             chicken.imageResId
         )
 
-
-        // Name
         previewName.text =
             chicken.name
 
-
-        // Rarity
         previewRarity.text =
             chicken.rarity.displayName
-
 
         RarityTextStyler.apply(
             previewName,
@@ -381,196 +370,137 @@ class ShopActivity : AppCompatActivity() {
             chicken.rarity
         )
 
-
-        // =========================
-        // STATS
-        // =========================
-
         previewStats.text =
             "Base Production: ${chicken.baseProduction}\n" +
                     "Max Level: ${chicken.maxUpgradeLevel}\n" +
                     "Max Multiplier: x${chicken.maxMultiplier}"
 
+        when {
+            !GameManager.isOwned(chicken) -> {
+                previewPrice.text =
+                    "🥚 ${formatNumber(chicken.shopPrice)} Eggs"
 
-        // =========================
-        // NOT OWNED
-        // =========================
+                buyButton.text = "🛒 BUY"
+                buyButton.isEnabled = true
+                buyButton.alpha = 1f
 
-        if (!GameManager.isOwned(chicken)) {
+                deployButton.text = "DEPLOY"
+                deployButton.isEnabled = false
+                deployButton.alpha = 0.5f
+            }
 
-            previewPrice.text =
-                "🥚 ${formatNumber(chicken.shopPrice)} Eggs"
+            GameManager.isEquipped(chicken) -> {
+                previewPrice.text =
+                    "Owned • Active"
 
-            buyButton.text =
-                "BUY"
+                buyButton.text = "OWNED"
+                buyButton.isEnabled = false
+                buyButton.alpha = 0.5f
 
-            buyButton.isEnabled =
-                true
+                deployButton.text = "ACTIVE"
+                deployButton.isEnabled = false
+                deployButton.alpha = 0.55f
+            }
 
-            buyButton.alpha =
-                1f
+            else -> {
+                previewPrice.text =
+                    "Owned"
 
+                buyButton.text = "OWNED"
+                buyButton.isEnabled = false
+                buyButton.alpha = 0.5f
 
-            deployButton.text =
-                "DEPLOY"
-
-            deployButton.isEnabled =
-                false
-
-            deployButton.alpha =
-                0.5f
+                deployButton.text = "🐔 DEPLOY"
+                deployButton.isEnabled = true
+                deployButton.alpha = 1f
+            }
         }
 
-
-        // =========================
-        // OWNED + ACTIVE
-        // =========================
-
-        else if (GameManager.isEquipped(chicken)) {
-
-            previewPrice.text =
-                "Owned • Active"
-
-            buyButton.text =
-                "OWNED"
-
-            buyButton.isEnabled =
-                false
-
-            buyButton.alpha =
-                0.5f
-
-
-            deployButton.text =
-                "ACTIVE"
-
-            deployButton.isEnabled =
-                true
-
-            deployButton.alpha =
-                1f
-        }
-
-
-        // =========================
-        // OWNED BUT NOT ACTIVE
-        // =========================
-
-        else {
-
-            previewPrice.text =
-                "Owned"
-
-            buyButton.text =
-                "OWNED"
-
-            buyButton.isEnabled =
-                false
-
-            buyButton.alpha =
-                0.5f
-
-
-            deployButton.text =
-                "DEPLOY"
-
-            deployButton.isEnabled =
-                true
-
-            deployButton.alpha =
-                1f
-        }
-
-
+        updateBuyPulse()
+        animatePreviewChange()
         updateEggDisplay()
     }
 
-
-    // =====================================================
-    // BUY CHICKEN
-    // =====================================================
-
     private fun buySelectedChicken() {
+        val chicken = selectedChicken
 
-        val chicken =
-            selectedChicken
-
-
-        // Already owned
         if (GameManager.isOwned(chicken)) {
-
-            previewPrice.text =
-                "You already own this chicken!"
+            showShopPopup(
+                "ALREADY OWNED!",
+                "${chicken.name} is already in your collection.",
+                chicken,
+                false
+            )
 
             return
         }
 
-
-        // Not enough eggs
         if (GameManager.eggs < chicken.shopPrice) {
+            val missing =
+                chicken.shopPrice - GameManager.eggs
 
-            previewPrice.text =
-                "Not enough eggs!"
+            showShopPopup(
+                "NOT ENOUGH EGGS!",
+                "You need 🥚 ${formatNumber(missing)} more eggs.",
+                chicken,
+                false
+            )
 
             return
         }
 
-
-        // Attempt purchase
-        if (GameManager.buyChicken(chicken)) {
-
-            previewPrice.text =
-                "Purchased!"
-
-            refreshShop()
+        if (!GameManager.buyChicken(chicken)) {
+            return
         }
+
+        animateEggCounter()
+
+        showShopPopup(
+            "🎉 PURCHASED! 🎉",
+            "${chicken.name} was added to your collection!",
+            chicken,
+            true
+        )
+
+        refreshShop()
     }
 
-
-    // =====================================================
-    // DEPLOY CHICKEN
-    // =====================================================
-
     private fun handleDeployButton() {
+        val chicken = selectedChicken
 
-        val chicken =
-            selectedChicken
-
-
-        // Must own chicken
         if (!GameManager.isOwned(chicken)) {
-
-            previewPrice.text =
-                "Buy this chicken first!"
+            showShopPopup(
+                "LOCKED!",
+                "Buy ${chicken.name} before deploying it.",
+                chicken,
+                false
+            )
 
             return
         }
 
-
-        // Already deployed
         if (GameManager.isEquipped(chicken)) {
-
-            previewPrice.text =
-                "This chicken is already active!"
+            showShopPopup(
+                "ALREADY ACTIVE!",
+                "${chicken.name} is already working on your farm.",
+                chicken,
+                false
+            )
 
             return
         }
 
-
-        // Free farm slot
         if (
             GameManager.equippedChickens.size <
             GameManager.maxChickenSlots
         ) {
-
-            if (
-                GameManager.equipChicken(
-                    chicken
+            if (GameManager.equipChicken(chicken)) {
+                showShopPopup(
+                    "🐔 DEPLOYED!",
+                    "${chicken.name} is now working on your farm!",
+                    chicken,
+                    true
                 )
-            ) {
-
-                previewPrice.text =
-                    "${chicken.name} deployed!"
 
                 refreshShop()
             }
@@ -578,111 +508,132 @@ class ShopActivity : AppCompatActivity() {
             return
         }
 
+        showReplaceChickenPopup(chicken)
+    }
 
-        // Farm full:
-        // choose chicken to replace
-        showReplaceChickenPopup(
-            chicken
+    private fun updateFeederRestock() {
+        val feeder = GameManager.feeder
+        val capacity = feeder.getCapacity()
+
+        val missingFood =
+            (capacity - feeder.currentFood)
+                .coerceAtLeast(0)
+
+        feederStockText.text =
+            "Food: ${feeder.currentFood} / $capacity"
+
+        if (missingFood == 0) {
+            feederRestockCostText.text =
+                "Feeder is full!"
+
+            feederRestockCostText.setTextColor(
+                Color.parseColor("#3F8A47")
+            )
+
+            restockFeederButton.text =
+                "✓ FULL"
+
+            restockFeederButton.isEnabled =
+                false
+
+            restockFeederButton.alpha =
+                0.55f
+
+            return
+        }
+
+        val cost =
+            missingFood *
+                    RESTOCK_COST_PER_FOOD
+
+        feederRestockCostText.text =
+            "Restock Cost: 🥚 ${formatNumber(cost)}"
+
+        if (GameManager.eggs >= cost) {
+            feederRestockCostText.setTextColor(
+                Color.parseColor("#57351F")
+            )
+        } else {
+            feederRestockCostText.setTextColor(
+                Color.parseColor("#A24A3A")
+            )
+        }
+
+        restockFeederButton.text =
+            "🌽 RESTOCK"
+
+        restockFeederButton.isEnabled =
+            true
+
+        restockFeederButton.alpha =
+            1f
+    }
+
+    private fun restockFeeder() {
+        val feeder = GameManager.feeder
+        val capacity = feeder.getCapacity()
+
+        val missingFood =
+            (capacity - feeder.currentFood)
+                .coerceAtLeast(0)
+
+        if (missingFood == 0) {
+            showShopPopup(
+                "FEEDER FULL!",
+                "Your feeder is already completely stocked.",
+                null,
+                false
+            )
+
+            return
+        }
+
+        val cost =
+            missingFood *
+                    RESTOCK_COST_PER_FOOD
+
+        if (GameManager.eggs < cost) {
+            val missingEggs =
+                cost - GameManager.eggs
+
+            showShopPopup(
+                "NOT ENOUGH EGGS!",
+                "You need 🥚 ${formatNumber(missingEggs)} more eggs.",
+                null,
+                false
+            )
+
+            return
+        }
+
+        GameManager.eggs -= cost
+
+        feeder.addFood(missingFood)
+
+        animateEggCounter()
+        updateEggDisplay()
+        updateFeederRestock()
+
+        showShopPopup(
+            "🌽 RESTOCKED!",
+            "Your feeder is now ${feeder.currentFood} / ${feeder.getCapacity()} full.",
+            null,
+            true
         )
     }
 
-
-    // =====================================================
-    // REFRESH SHOP
-    // =====================================================
-
-    private fun refreshShop() {
-
-        updateEggDisplay()
-
-        populateChickenGrid()
-
-        updatePreview()
-    }
-
-
-    // =====================================================
-    // EGG DISPLAY
-    // =====================================================
-
-    private fun updateEggDisplay() {
-
-        shopEggText.text =
-            "🥚 ${formatNumber(GameManager.eggs)}"
-    }
-
-
-    // =====================================================
-    // NUMBER FORMATTING
-    // =====================================================
-
-    private fun formatNumber(
-        number: Int
-    ): String {
-
-        return when {
-
-            number >= 1_000_000 -> {
-
-                String.format(
-                    "%.1fM",
-                    number / 1_000_000.0
-                )
-            }
-
-
-            number >= 1_000 -> {
-
-                String.format(
-                    "%.1fK",
-                    number / 1_000.0
-                )
-            }
-
-
-            else -> {
-
-                number.toString()
-            }
-        }
-    }
-
-
-    // =====================================================
-    // RETURNING TO SHOP
-    // =====================================================
-
-    override fun onResume() {
-        super.onResume()
-
-        updateEggDisplay()
-
-        if (::chickenGrid.isInitialized) {
-
-            populateChickenGrid()
-
-            updatePreview()
-        }
-    }
     private fun showReplaceChickenPopup(
         newChicken: Chicken
     ) {
-
-        val dialog =
-            Dialog(this)
+        val dialog = Dialog(this)
 
         dialog.setContentView(
             R.layout.dialog_replace_chicken
         )
 
-
-        // Transparent outside the rounded popup
         dialog.window?.setBackgroundDrawable(
-            ColorDrawable(
-                Color.TRANSPARENT
-            )
+            ColorDrawable(Color.TRANSPARENT)
         )
-
 
         val newChickenImage =
             dialog.findViewById<ImageView>(
@@ -709,11 +660,6 @@ class ShopActivity : AppCompatActivity() {
                 R.id.cancelDeployButton
             )
 
-
-        // =========================
-        // NEW CHICKEN INFO
-        // =========================
-
         newChickenImage.setImageResource(
             newChicken.imageResId
         )
@@ -723,7 +669,6 @@ class ShopActivity : AppCompatActivity() {
 
         newChickenRarity.text =
             newChicken.rarity.displayName
-
 
         RarityTextStyler.apply(
             newChickenName,
@@ -735,27 +680,15 @@ class ShopActivity : AppCompatActivity() {
             newChicken.rarity
         )
 
-
-        // =========================
-        // CURRENT ACTIVE CHICKENS
-        // =========================
-
-        for (
-        index in
-        GameManager.equippedChickens.indices
-        ) {
-
+        for (index in GameManager.equippedChickens.indices) {
             val currentChicken =
                 GameManager.equippedChickens[index]
 
-
-            val row =
-                layoutInflater.inflate(
-                    R.layout.item_replace_chicken,
-                    replacementContainer,
-                    false
-                )
-
+            val row = layoutInflater.inflate(
+                R.layout.item_replace_chicken,
+                replacementContainer,
+                false
+            )
 
             val image =
                 row.findViewById<ImageView>(
@@ -777,70 +710,459 @@ class ShopActivity : AppCompatActivity() {
                     R.id.replaceChickenButton
                 )
 
-
             image.setImageResource(
                 currentChicken.imageResId
             )
 
-
             name.text =
                 currentChicken.name
-
 
             RarityTextStyler.apply(
                 name,
                 currentChicken.rarity
             )
 
-
             stats.text =
-                "Level ${currentChicken.upgradeLevel}  •  " +
-                        "${currentChicken.getProduction()} Eggs"
+                "Level ${currentChicken.upgradeLevel} • " +
+                        "${formatNumber(GameManager.getChickenProduction(currentChicken))} Eggs"
 
+            replaceButton.text =
+                "REPLACE"
+
+            addButtonPressAnimation(
+                replaceButton
+            )
 
             replaceButton.setOnClickListener {
-
                 val replaced =
-                    GameManager
-                        .replaceEquippedChicken(
-                            index,
-                            newChicken
-                        )
-
+                    GameManager.replaceEquippedChicken(
+                        index,
+                        newChicken
+                    )
 
                 if (replaced) {
-
                     dialog.dismiss()
-
-                    previewPrice.text =
-                        "${newChicken.name} deployed!"
-
                     refreshShop()
+
+                    showShopPopup(
+                        "🐔 DEPLOYED!",
+                        "${newChicken.name} replaced ${currentChicken.name}.",
+                        newChicken,
+                        true
+                    )
                 }
             }
 
-
-            replacementContainer.addView(
-                row
-            )
+            replacementContainer.addView(row)
         }
 
-
         cancelButton.setOnClickListener {
-
             dialog.dismiss()
         }
 
+        addButtonPressAnimation(
+            cancelButton
+        )
 
         dialog.show()
 
-
-        // Make popup wide enough
         dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.90)
-                .toInt(),
+            (
+                    resources.displayMetrics.widthPixels *
+                            0.90
+                    ).toInt(),
 
-            LinearLayout.LayoutParams.WRAP_CONTENT
+            WindowManager.LayoutParams.WRAP_CONTENT
         )
+    }
+
+    private fun showShopPopup(
+        title: String,
+        message: String,
+        chicken: Chicken?,
+        success: Boolean
+    ) {
+        val dialog = Dialog(this)
+
+        dialog.setContentView(
+            R.layout.dialog_shop_message
+        )
+
+        dialog.window?.setBackgroundDrawable(
+            ColorDrawable(Color.TRANSPARENT)
+        )
+
+        val root =
+            dialog.findViewById<View>(
+                R.id.shopPopupRoot
+            )
+
+        val popupTitle =
+            dialog.findViewById<TextView>(
+                R.id.shopPopupTitle
+            )
+
+        val popupImage =
+            dialog.findViewById<ImageView>(
+                R.id.shopPopupImage
+            )
+
+        val popupChickenName =
+            dialog.findViewById<TextView>(
+                R.id.shopPopupChickenName
+            )
+
+        val popupMessage =
+            dialog.findViewById<TextView>(
+                R.id.shopPopupMessage
+            )
+
+        val popupButton =
+            dialog.findViewById<Button>(
+                R.id.shopPopupButton
+            )
+
+        popupTitle.text =
+            title
+
+        popupMessage.text =
+            message
+
+        if (chicken != null) {
+            popupImage.visibility =
+                View.VISIBLE
+
+            popupChickenName.visibility =
+                View.VISIBLE
+
+            popupImage.setImageResource(
+                chicken.imageResId
+            )
+
+            popupChickenName.text =
+                chicken.name
+
+            RarityTextStyler.apply(
+                popupChickenName,
+                chicken.rarity
+            )
+        } else {
+            popupImage.visibility =
+                View.GONE
+
+            popupChickenName.visibility =
+                View.GONE
+        }
+
+        if (success) {
+            popupButton.text =
+                "AWESOME!"
+
+            popupButton.setBackgroundResource(
+                R.drawable.game_buy_button_bg
+            )
+        } else {
+            popupButton.text =
+                "OK"
+
+            popupButton.setBackgroundResource(
+                R.drawable.game_back_button_bg
+            )
+        }
+
+        popupButton.backgroundTintList =
+            null
+
+        popupButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        addButtonPressAnimation(
+            popupButton
+        )
+
+        dialog.show()
+
+        dialog.window?.setLayout(
+            (
+                    resources.displayMetrics.widthPixels *
+                            0.86
+                    ).toInt(),
+
+            WindowManager.LayoutParams.WRAP_CONTENT
+        )
+
+        root.scaleX = 0.68f
+        root.scaleY = 0.68f
+        root.alpha = 0f
+
+        root.animate()
+            .scaleX(1.06f)
+            .scaleY(1.06f)
+            .alpha(1f)
+            .setDuration(220)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction {
+                root.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(130)
+                    .start()
+            }
+            .start()
+
+        if (chicken != null) {
+            popupImage.translationY =
+                -dpToPx(20).toFloat()
+
+            popupImage.alpha =
+                0f
+
+            popupImage.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setDuration(300)
+                .setStartDelay(100)
+                .setInterpolator(
+                    DecelerateInterpolator()
+                )
+                .start()
+        }
+    }
+
+    private fun animateCardSelection(card: View) {
+        card.animate().cancel()
+
+        card.animate()
+            .scaleX(1.07f)
+            .scaleY(1.07f)
+            .setDuration(100)
+            .withEndAction {
+                card.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(150)
+                    .start()
+            }
+            .start()
+    }
+
+    private fun animatePreviewChange() {
+        previewImage.animate().cancel()
+
+        previewImage.scaleX = 0.78f
+        previewImage.scaleY = 0.78f
+        previewImage.alpha = 0.4f
+
+        previewImage.animate()
+            .scaleX(1.08f)
+            .scaleY(1.08f)
+            .alpha(1f)
+            .setDuration(180)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction {
+                previewImage.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(120)
+                    .start()
+            }
+            .start()
+    }
+
+    private fun updateBuyPulse() {
+        val shouldPulse =
+            !GameManager.isOwned(selectedChicken) &&
+                    GameManager.eggs >= selectedChicken.shopPrice &&
+                    buyButton.isEnabled
+
+        if (shouldPulse) {
+            startBuyPulse()
+        } else {
+            stopBuyPulse()
+        }
+    }
+
+    private fun startBuyPulse() {
+        if (buyPulseAnimator?.isRunning == true) {
+            return
+        }
+
+        buyPulseAnimator =
+            ValueAnimator.ofFloat(
+                1f,
+                1.05f
+            ).apply {
+                duration = 550
+                repeatCount = ValueAnimator.INFINITE
+                repeatMode = ValueAnimator.REVERSE
+                interpolator =
+                    AccelerateDecelerateInterpolator()
+
+                addUpdateListener {
+                    val scale =
+                        it.animatedValue as Float
+
+                    buyButton.scaleX =
+                        scale
+
+                    buyButton.scaleY =
+                        scale
+                }
+
+                start()
+            }
+    }
+
+    private fun stopBuyPulse() {
+        buyPulseAnimator?.cancel()
+        buyPulseAnimator = null
+
+        if (::buyButton.isInitialized) {
+            buyButton.scaleX = 1f
+            buyButton.scaleY = 1f
+        }
+    }
+
+    private fun startPreviewBob() {
+        if (previewBobAnimator?.isRunning == true) {
+            return
+        }
+
+        previewBobAnimator =
+            ObjectAnimator.ofFloat(
+                previewImage,
+                View.TRANSLATION_Y,
+                0f,
+                -dpToPx(5).toFloat(),
+                0f
+            ).apply {
+                duration = 1800
+                repeatCount =
+                    ValueAnimator.INFINITE
+
+                interpolator =
+                    AccelerateDecelerateInterpolator()
+
+                start()
+            }
+    }
+
+    private fun stopPreviewBob() {
+        previewBobAnimator?.cancel()
+        previewBobAnimator = null
+
+        if (::previewImage.isInitialized) {
+            previewImage.translationY = 0f
+        }
+    }
+
+    private fun animateEggCounter() {
+        shopEggText.animate().cancel()
+
+        shopEggText.scaleX = 1f
+        shopEggText.scaleY = 1f
+
+        shopEggText.animate()
+            .scaleX(1.12f)
+            .scaleY(1.12f)
+            .setDuration(100)
+            .withEndAction {
+                shopEggText.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(150)
+                    .start()
+            }
+            .start()
+    }
+
+    private fun addButtonPressAnimation(button: View) {
+        button.setOnTouchListener { view, event ->
+            if (!view.isEnabled) {
+                return@setOnTouchListener false
+            }
+
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    view.animate().cancel()
+
+                    if (view === buyButton) {
+                        stopBuyPulse()
+                    }
+
+                    view.animate()
+                        .scaleX(0.92f)
+                        .scaleY(0.92f)
+                        .setDuration(75)
+                        .start()
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    view.animate().cancel()
+
+                    view.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(120)
+                        .withEndAction {
+                            if (view === buyButton) {
+                                updateBuyPulse()
+                            }
+                        }
+                        .start()
+                }
+            }
+
+            false
+        }
+    }
+
+    private fun refreshShop() {
+        updateEggDisplay()
+        populateChickenGrid(false)
+        updatePreview()
+    }
+
+    private fun updateEggDisplay() {
+        shopEggText.text =
+            "🥚 ${formatNumber(GameManager.eggs)}"
+    }
+
+    private fun formatNumber(number: Int): String {
+        return when {
+            number >= 1_000_000_000 ->
+                String.format(
+                    "%.1fB",
+                    number / 1_000_000_000.0
+                )
+
+            number >= 1_000_000 ->
+                String.format(
+                    "%.1fM",
+                    number / 1_000_000.0
+                )
+
+            number >= 1_000 ->
+                String.format(
+                    "%.1fK",
+                    number / 1_000.0
+                )
+
+            else ->
+                number.toString()
+        }
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (
+                dp *
+                        resources.displayMetrics.density
+                ).toInt()
+    }
+
+    private companion object {
+        const val RESTOCK_COST_PER_FOOD = 25
     }
 }

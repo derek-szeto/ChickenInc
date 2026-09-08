@@ -1,27 +1,85 @@
 package com.example.chickeninc
 
+import android.animation.AnimatorListenerAdapter
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.os.Handler
+import android.os.Looper
+import android.view.View
+import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.widget.TextView
+import kotlin.random.Random
+
 
 object RarityTextStyler {
+
+
+    private data class StyleState(
+
+        val rarity: Rarity,
+
+        val animator: ValueAnimator? = null,
+
+        val particleHandler: Handler? = null,
+
+        val particleRunnable: Runnable? = null
+    )
+
 
     fun apply(
         textView: TextView,
         rarity: Rarity
     ) {
 
-        // Stop any old rarity animation
-        val oldAnimator = textView.tag
+        val oldState =
+            textView.tag as? StyleState
 
-        if (oldAnimator is ValueAnimator) {
-            oldAnimator.cancel()
+
+        // IMPORTANT:
+        // MainActivity updates very frequently.
+        // Don't restart rarity animations
+        // every production tick.
+        if (
+            oldState != null &&
+            oldState.rarity == rarity
+        ) {
+
+            return
         }
 
-        textView.tag = null
 
-        textView.alpha = 1f
+        // =========================
+        // STOP OLD EFFECTS
+        // =========================
+
+        oldState
+            ?.animator
+            ?.cancel()
+
+
+        if (
+            oldState?.particleHandler != null &&
+            oldState.particleRunnable != null
+        ) {
+
+            oldState
+                .particleHandler
+                .removeCallbacks(
+                    oldState.particleRunnable
+                )
+        }
+
+
+        textView.tag =
+            null
+
+
+        textView.alpha =
+            1f
+
 
         textView.setShadowLayer(
             0f,
@@ -31,69 +89,203 @@ object RarityTextStyler {
         )
 
 
+        // =========================
+        // RARITIES
+        // =========================
+
         when (rarity) {
+
+
+            // -------------------------
+            // COMMON
+            // -------------------------
 
             Rarity.COMMON -> {
 
                 textView.setTextColor(
-                    Color.parseColor("#B0BEC5")
+                    Color.parseColor(
+                        "#5F5A52"
+                    )
                 )
+
+
+                // Small light outline-like effect
+                // makes it readable over sky/grass.
+                textView.setShadowLayer(
+                    2.5f,
+                    0f,
+                    1f,
+                    Color.parseColor(
+                        "#FFF7E8"
+                    )
+                )
+
+
+                textView.tag =
+                    StyleState(
+                        rarity
+                    )
             }
 
+
+            // -------------------------
+            // UNCOMMON
+            // -------------------------
 
             Rarity.UNCOMMON -> {
 
                 textView.setTextColor(
-                    Color.parseColor("#76FF03")
+                    Color.parseColor(
+                        "#2F8C3D"
+                    )
                 )
+
+
+                textView.setShadowLayer(
+                    3f,
+                    0f,
+                    1f,
+                    Color.parseColor(
+                        "#DDF3D8"
+                    )
+                )
+
+
+                textView.tag =
+                    StyleState(
+                        rarity
+                    )
             }
 
+
+            // -------------------------
+            // RARE
+            // -------------------------
 
             Rarity.RARE -> {
 
                 textView.setTextColor(
-                    Color.parseColor("#40C4FF")
+                    Color.parseColor(
+                        "#236FA5"
+                    )
                 )
+
+
+                textView.setShadowLayer(
+                    3.5f,
+                    0f,
+                    1f,
+                    Color.parseColor(
+                        "#D8F0FF"
+                    )
+                )
+
+
+                textView.tag =
+                    StyleState(
+                        rarity
+                    )
             }
 
+
+            // -------------------------
+            // EPIC
+            // -------------------------
 
             Rarity.EPIC -> {
 
                 textView.setTextColor(
-                    Color.parseColor("#D500F9")
+                    Color.parseColor(
+                        "#7A469D"
+                    )
+                )
+
+
+                textView.setShadowLayer(
+                    4f,
+                    0f,
+                    1f,
+                    Color.parseColor(
+                        "#E7D9F0"
+                    )
+                )
+
+
+                textView.tag =
+                    StyleState(
+                        rarity
+                    )
+            }
+
+
+            // -------------------------
+            // LEGENDARY
+            // -------------------------
+
+            Rarity.LEGENDARY -> {
+
+                startLegendaryAnimation(
+                    textView
                 )
             }
 
 
-            Rarity.LEGENDARY -> {
-
-                startLegendaryAnimation(textView)
-            }
-
+            // -------------------------
+            // SECRET
+            // -------------------------
 
             Rarity.SECRET -> {
 
-                startSecretAnimation(textView)
+                startSecretAnimation(
+                    textView
+                )
             }
         }
     }
 
 
+    // =====================================================
+    // LEGENDARY
+    // =====================================================
+
     private fun startLegendaryAnimation(
         textView: TextView
     ) {
 
-        val animator = ValueAnimator.ofObject(
-            ArgbEvaluator(),
-            Color.parseColor("#FFB300"),
-            Color.parseColor("#FFF59D"),
-            Color.parseColor("#FFD700")
-        )
+        /*
+         * Darker gold than before.
+         *
+         * The old very bright yellow glow
+         * could become uncomfortable against
+         * cream panels.
+         */
 
-        animator.duration = 1100
+        val animator =
+            ValueAnimator.ofObject(
+
+                ArgbEvaluator(),
+
+                Color.parseColor(
+                    "#B87900"
+                ),
+
+                Color.parseColor(
+                    "#E8B832"
+                ),
+
+                Color.parseColor(
+                    "#C98D08"
+                )
+            )
+
+
+        animator.duration =
+            1400
+
 
         animator.repeatCount =
             ValueAnimator.INFINITE
+
 
         animator.repeatMode =
             ValueAnimator.REVERSE
@@ -104,67 +296,369 @@ object RarityTextStyler {
             val color =
                 it.animatedValue as Int
 
-            textView.setTextColor(color)
 
+            textView.setTextColor(
+                color
+            )
+
+
+            // Soft glow instead of giant neon glow
             textView.setShadowLayer(
-                10f,
+                4.5f,
                 0f,
-                0f,
-                Color.parseColor("#FFD700")
+                1f,
+                Color.parseColor(
+                    "#FFF0B5"
+                )
             )
         }
 
+
         animator.start()
 
-        textView.tag = animator
+
+        textView.tag =
+            StyleState(
+                rarity =
+                    Rarity.LEGENDARY,
+
+                animator =
+                    animator
+            )
     }
 
+
+    // =====================================================
+    // SECRET
+    // =====================================================
 
     private fun startSecretAnimation(
         textView: TextView
     ) {
 
-        // Bright text surrounded by a dark aura
+        // =========================
+        // BLACK TEXT
+        // =========================
+
         textView.setTextColor(
-            Color.parseColor("#F5F5F5")
+            Color.BLACK
         )
 
 
-        val animator =
+        /*
+         * Gray aura around black text.
+         * We never reduce alpha because
+         * Secret should always remain readable.
+         */
+
+        val auraAnimator =
             ValueAnimator.ofFloat(
-                5f,
-                16f
+                3.5f,
+                7f
             )
 
-        animator.duration = 900
 
-        animator.repeatCount =
+        auraAnimator.duration =
+            1200
+
+
+        auraAnimator.repeatCount =
             ValueAnimator.INFINITE
 
-        animator.repeatMode =
+
+        auraAnimator.repeatMode =
             ValueAnimator.REVERSE
 
 
-        animator.addUpdateListener {
+        auraAnimator.addUpdateListener {
 
             val glow =
                 it.animatedValue as Float
 
-            // Black aura surrounding Secret text
+
             textView.setShadowLayer(
                 glow,
                 0f,
-                0f,
-                Color.BLACK
+                1f,
+                Color.parseColor(
+                    "#9A9A9A"
+                )
             )
-
-            // Slight shining pulse
-            textView.alpha =
-                0.8f + (glow / 80f)
         }
 
-        animator.start()
 
-        textView.tag = animator
+        auraAnimator.start()
+
+
+        // =========================
+        // SECRET PARTICLES
+        // =========================
+
+        val handler =
+            Handler(
+                Looper.getMainLooper()
+            )
+
+
+        lateinit var particleRunnable:
+                Runnable
+
+
+        particleRunnable =
+            object : Runnable {
+
+                override fun run() {
+
+                    /*
+                     * If this screen is gone,
+                     * stop automatically.
+                     */
+                    if (
+                        !textView
+                            .isAttachedToWindow
+                    ) {
+
+                        return
+                    }
+
+
+                    // Emit a couple particles
+                    // each cycle.
+                    spawnSecretParticle(
+                        textView
+                    )
+
+                    spawnSecretParticle(
+                        textView
+                    )
+
+
+                    handler.postDelayed(
+                        this,
+                        320
+                    )
+                }
+            }
+
+
+        handler.post(
+            particleRunnable
+        )
+
+
+        textView.tag =
+            StyleState(
+
+                rarity =
+                    Rarity.SECRET,
+
+                animator =
+                    auraAnimator,
+
+                particleHandler =
+                    handler,
+
+                particleRunnable =
+                    particleRunnable
+            )
+    }
+
+
+    // =====================================================
+    // SECRET PARTICLE
+    // =====================================================
+
+    private fun spawnSecretParticle(
+        textView: TextView
+    ) {
+
+        val parent =
+            textView.parent
+                    as? ViewGroup
+                ?: return
+
+
+        if (
+            textView.width <= 0 ||
+            textView.height <= 0
+        ) {
+
+            return
+        }
+
+
+        val particle =
+            View(
+                textView.context
+            )
+
+
+        // Random 3–6dp particle
+        val size =
+            dpToPx(
+                textView,
+                Random.nextInt(
+                    3,
+                    7
+                )
+            )
+
+
+        // Black / charcoal / gray
+        val particleColors =
+            intArrayOf(
+
+                Color.parseColor(
+                    "#101010"
+                ),
+
+                Color.parseColor(
+                    "#303030"
+                ),
+
+                Color.parseColor(
+                    "#565656"
+                ),
+
+                Color.parseColor(
+                    "#808080"
+                )
+            )
+
+
+        val shape =
+            GradientDrawable()
+
+
+        shape.shape =
+            GradientDrawable.OVAL
+
+
+        shape.setColor(
+            particleColors.random()
+        )
+
+
+        particle.background =
+            shape
+
+
+        particle.alpha =
+            0.8f
+
+
+        /*
+         * Overlay means the particles
+         * do NOT affect layout spacing.
+         */
+        particle.layout(
+            0,
+            0,
+            size,
+            size
+        )
+
+
+        parent.overlay.add(
+            particle
+        )
+
+
+        // Start somewhere around the letters
+        particle.x =
+            textView.x +
+                    Random.nextFloat() *
+                    textView.width
+
+
+        particle.y =
+            textView.y +
+                    textView.height *
+                    (
+                            0.25f +
+                                    Random.nextFloat() *
+                                    0.55f
+                            )
+
+
+        val sideMovement =
+            dpToPx(
+                textView,
+                Random.nextInt(
+                    -14,
+                    15
+                )
+            )
+
+
+        val rise =
+            dpToPx(
+                textView,
+                Random.nextInt(
+                    18,
+                    38
+                )
+            )
+
+
+        particle.animate()
+
+            .translationXBy(
+                sideMovement.toFloat()
+            )
+
+            .translationYBy(
+                -rise.toFloat()
+            )
+
+            .alpha(
+                0f
+            )
+
+            .scaleX(
+                0.35f
+            )
+
+            .scaleY(
+                0.35f
+            )
+
+            .setDuration(
+                Random.nextLong(
+                    650,
+                    1000
+                )
+            )
+
+            .setInterpolator(
+                DecelerateInterpolator()
+            )
+
+            .withEndAction {
+
+                parent.overlay.remove(
+                    particle
+                )
+            }
+
+            .start()
+    }
+
+
+    // =====================================================
+    // DP HELPER
+    // =====================================================
+
+    private fun dpToPx(
+        view: View,
+        dp: Int
+    ): Int {
+
+        return (
+                dp *
+                        view.resources
+                            .displayMetrics
+                            .density
+                ).toInt()
     }
 }
